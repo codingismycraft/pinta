@@ -11,6 +11,6 @@ STRVEC get_python_files(CSTRREF parent_dir);
 STRING full_path_to_vertex( CSTRREF fullpath);
 void parse_file(CSTRREF fullpath, FILE *output);
 STRING discover_file(CSTRREF  filename);
-rapidjson::Document make_json_document_from_file(const std::string &filename);
+rapidjson::Document make_json_document_from_file(CSTRREF filename);
 void create_dag();
 DEPENDENCY_GRAPH load_dependency_graph();

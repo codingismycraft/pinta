@@ -19,8 +19,6 @@
 #include <sys/stat.h>
 #include <stdbool.h>
 
-#define PYTHON_ROOT "/home/john/repos/milky-way/src/python"
-
 #define BUFFER_SIZE 32000
 #define DELIMETER ","
 
@@ -143,7 +141,7 @@ bool file_exists (CSTRREF dir, CSTRREF filename) {
     return stat (full_path.c_str(), &buffer) == 0;
 }
 
-bool  directory_exists(std::string dir_path){
+bool  directory_exists(STRING dir_path){
     struct stat buffer;
     return (stat (dir_path.c_str(), &buffer) == 0);
 }
@@ -158,7 +156,7 @@ bool  directory_exists(std::string dir_path){
 
     @return Not zero on success.
 */
-std::string get_parent_dir(const std::string& dir){
+STRING get_parent_dir(CSTRREF dir){
     const std::regex e1("^\\/[^\\/]*($|\\/$)");
     const std::regex e2("\\/[^\\/]*($|\\/$)");
     if (dir.empty() || dir == "/" || dir[0] != '/')
@@ -194,7 +192,7 @@ STRING discover_file(CSTRREF filename){
 
 /// @param filename The file name containing the json document.
 /// @return A rapidjson Document object.
-rapidjson::Document make_json_document_from_file(const std::string &filename) {
+rapidjson::Document make_json_document_from_file(CSTRREF filename) {
     rapidjson::Document document;
     FILE *fp = fopen(filename.c_str(), "r");
     if (fp == NULL)
