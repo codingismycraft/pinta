@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# Static resourses
+*.csv
+**/.idea
+**/cmake-build-debug
+**/cmake-build-release
+
+
