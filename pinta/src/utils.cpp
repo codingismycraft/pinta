@@ -110,7 +110,7 @@ STRING full_path_to_vertex(CSTRREF fullpath) {
 }
 
 
-std::regex rgx1("^import (.+) as");
+std::regex rgx1("^import (.+?) as");
 std::regex rgx2("^import ([^ ]+)\\s*\\n");
 
 
