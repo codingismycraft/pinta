@@ -21,7 +21,7 @@ rapidjson::Document make_json_document_from_file(CSTRREF filename);
 
 void create_dag();
 
-DEPENDENCY_GRAPH load_dependency_graph();
+DEPENDENCY_GRAPH load_dependency_graph(CSTRREF dependency_filename);
 
 // String utilities.
 void ltrim(STRINGREF str_to_ltrim);
@@ -37,4 +37,4 @@ void trim(STRINGREF s);
 STRING trimed(CSTRREF s);
 
 // Graph utilities
-void walk_dependencies(CSTRREF node, const DEPENDENCY_GRAPH& dependecies);
+std::vector<std::pair<STRING, STRING>> walk_dependencies(CSTRREF node, DEPENDENCY_GRAPH& dg);

@@ -18,6 +18,8 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <stdbool.h>
+#include <set>
+#include <queue>
 
 #define BUFFER_SIZE 32000
 #define DELIMETER ","
@@ -116,12 +118,8 @@ void parse_file(CSTRREF fullpath, FILE *output) {
     FILE *fp;
     fp = fopen(fullpath.c_str(), "r");
     assert(fp != NULL);
-
     STRING carryover_line = "";
-
     std::regex ends_with_continuation(R"(.*\\\n)");
-
-
     while (fgets(BUFFER, BUFFER_SIZE, fp)) {
         std::string s(BUFFER);
 
@@ -142,12 +140,12 @@ void parse_file(CSTRREF fullpath, FILE *output) {
         std::smatch match;
         if (std::regex_search(full_line.begin(), full_line.end(), match, rgx1) ||
             std::regex_search(full_line.begin(), full_line.end(), match, rgx2)) {
-            if (std::string(match[1]).find("\\") != STRING::npos) {
-                printf("Here\n");
+            auto node1 = STRING (match[1]);
+            if (node1[node1.size()-1] == '\r'){
+                node1 = node1.substr(0, node1.size()-1);
             }
-            fprintf(output, "%s, %s\n", std::string(match[1]).c_str(), full_path_to_vertex(fullpath).c_str());
+            fprintf(output, "%s, %s\n", node1.c_str(), full_path_to_vertex(fullpath).c_str());
         }
-
     }
     fclose(fp);
 }
@@ -266,9 +264,8 @@ STRVEC _get_tokens(char *buffer) {
     return move(v);
 }
 
-DEPENDENCY_GRAPH load_dependency_graph() {
+DEPENDENCY_GRAPH load_dependency_graph(CSTRREF dependency_filename) {
     DEPENDENCY_GRAPH graph;
-    const auto dependency_filename = Settings::obj().get_dependencies_filename();
     FILE *fp = fopen(dependency_filename.c_str(), "r");
     while (fgets(BUFFER, BUFFER_SIZE, fp)) {
         auto tokens = _get_tokens(BUFFER);
@@ -333,6 +330,31 @@ STRING trimed(CSTRREF s) {
     return move(s1);
 }
 
-void walk_dependencies(CSTRREF node, const DEPENDENCY_GRAPH& dependecies){
 
+std::vector<std::pair<STRING, STRING>> walk_dependencies(CSTRREF node, DEPENDENCY_GRAPH& dg){
+    std::set<STRING> visited;
+    std::queue<STRING> node_queue;
+    std::vector<std::pair<STRING, STRING>> edges;
+
+    if(!dg.count(node)){
+        return edges;
+    }
+
+    node_queue.emplace(node);
+    visited.emplace(node);
+
+    while (!node_queue.empty()){
+        auto current_node = node_queue.front();
+        node_queue.pop();
+        for(auto child: dg[current_node]){
+            if (visited.find(child) == visited.end()){
+                auto edge = std::make_pair(current_node, child);
+                edges.push_back(edge);
+                node_queue.emplace(child);
+            }
+        }
+        visited.emplace(current_node);
+    }
+
+    return edges;
 }
