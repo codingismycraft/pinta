@@ -34,8 +34,8 @@ std::string current_dir() {
 }
 
 
-bool is_directory(const std::string& parent_dir, const std::string& filename) {
-    if (filename =="." || filename == ".." || filename[0] =='.' || filename[0] == '_')
+bool is_directory(const std::string &parent_dir, const std::string &filename) {
+    if (filename == "." || filename == ".." || filename[0] == '.' || filename[0] == '_')
         return false;
 
     auto path = parent_dir + "/" + filename;
@@ -45,18 +45,16 @@ bool is_directory(const std::string& parent_dir, const std::string& filename) {
     return S_ISDIR(statbuf.st_mode);
 }
 
-bool ends_with(const std::string &mainStr, const std::string &toMatch)
-{
-    if(mainStr.size() >= toMatch.size() &&
-    mainStr.compare(mainStr.size() - toMatch.size(), toMatch.size(), toMatch) == 0)
+bool ends_with(const std::string &mainStr, const std::string &toMatch) {
+    if (mainStr.size() >= toMatch.size() &&
+        mainStr.compare(mainStr.size() - toMatch.size(), toMatch.size(), toMatch) == 0)
         return true;
     else
         return false;
 }
 
 
-bool is_regular_file(const std::string& parent_dir, const std::string& filename)
-{
+bool is_regular_file(const std::string &parent_dir, const std::string &filename) {
     auto path = parent_dir + "/" + filename;
     struct stat path_stat;
     stat(path.c_str(), &path_stat);
@@ -71,7 +69,7 @@ std::vector<std::string> get_directories(const std::string &parent_dir) {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (is_directory(parent_dir, dir->d_name)) {
-                directories.push_back(parent_dir + "/" +dir->d_name);
+                directories.push_back(parent_dir + "/" + dir->d_name);
             }
         }
         closedir(d);
@@ -87,8 +85,8 @@ std::vector<std::string> get_python_files(const std::string &parent_dir) {
     if (d) {
         while ((dir = readdir(d)) != NULL) {
             if (ends_with(dir->d_name, ".py")) {
-                auto filename = parent_dir + "/" +dir->d_name;
-                python_files.push_back(parent_dir + "/" +dir->d_name);
+                auto filename = parent_dir + "/" + dir->d_name;
+                python_files.push_back(parent_dir + "/" + dir->d_name);
             }
         }
         closedir(d);
@@ -97,15 +95,15 @@ std::vector<std::string> get_python_files(const std::string &parent_dir) {
 }
 
 
-STRING full_path_to_vertex(CSTRREF fullpath){
+STRING full_path_to_vertex(CSTRREF fullpath) {
     const std::regex e(Settings::obj().get_include_root());
-    auto vertex = std::regex_replace (fullpath, e, "");
+    auto vertex = std::regex_replace(fullpath, e, "");
     const std::regex separator("/");
-    vertex = std::regex_replace (vertex, separator, ".");
+    vertex = std::regex_replace(vertex, separator, ".");
     const std::regex starting_separator("^.");
-    vertex = std::regex_replace (vertex, starting_separator, "");
+    vertex = std::regex_replace(vertex, starting_separator, "");
     const std::regex python_extension(".py");
-    vertex = std::regex_replace (vertex, python_extension, "");
+    vertex = std::regex_replace(vertex, python_extension, "");
     return vertex;
 }
 
@@ -113,37 +111,56 @@ STRING full_path_to_vertex(CSTRREF fullpath){
 std::regex rgx1("^import (.+) as");
 std::regex rgx2("^import ([^ ]+)\\s*\\n");
 
-void parse_file(CSTRREF fullpath, FILE *output){
+
+void parse_file(CSTRREF fullpath, FILE *output) {
     FILE *fp;
     fp = fopen(fullpath.c_str(), "r");
-    assert(fp!=NULL);
-    while(fgets(BUFFER, BUFFER_SIZE, fp)) {
-        const std::string s(BUFFER);
-        if (s.empty() || s[0] != 'i')
-            continue;
-        std::smatch match;
-        if (std::regex_search(s.begin(), s.end(), match, rgx1) || std::regex_search(s.begin(), s.end(), match, rgx2))
-        {
-            //            if(std::string (match[1]).find("\\") != STRING::npos){
-            //                printf("Here\n");
-            //            }
+    assert(fp != NULL);
 
-            fprintf(output, "%s, %s\n", std::string (match[1]).c_str(), full_path_to_vertex(fullpath).c_str());
+    STRING carryover_line = "";
+
+    std::regex ends_with_continuation(R"(.*\\\n)");
+
+
+    while (fgets(BUFFER, BUFFER_SIZE, fp)) {
+        std::string s(BUFFER);
+
+        if(s.empty() || s[0] == '#')
+            continue;
+
+        if(s[0] != 'i' && carryover_line.empty())
+            continue;
+
+        if (std::regex_match(s, ends_with_continuation)) {
+            s.erase(s.end() - 2, s.end());
+            carryover_line += s;
+            continue;
+        }
+
+        CSTRING full_line = carryover_line + s;
+        carryover_line= "";
+        std::smatch match;
+        if (std::regex_search(full_line.begin(), full_line.end(), match, rgx1) ||
+            std::regex_search(full_line.begin(), full_line.end(), match, rgx2)) {
+            if (std::string(match[1]).find("\\") != STRING::npos) {
+                printf("Here\n");
+            }
+            fprintf(output, "%s, %s\n", std::string(match[1]).c_str(), full_path_to_vertex(fullpath).c_str());
         }
 
     }
     fclose(fp);
 }
 
-bool file_exists (CSTRREF dir, CSTRREF filename) {
-    struct stat   buffer;
+bool file_exists(CSTRREF dir, CSTRREF filename) {
+    struct stat buffer;
     auto full_path = dir + "/" + filename;
-    return stat (full_path.c_str(), &buffer) == 0;
+    return stat(full_path.c_str(), &buffer) == 0;
 }
 
-bool  directory_exists(STRING dir_path){
+bool directory_exists(STRING dir_path) {
     struct stat buffer;
-    return (stat (dir_path.c_str(), &buffer) == 0);
+    return (stat(dir_path.c_str(), &buffer) == 0);
 }
 
 /**
@@ -156,7 +173,7 @@ bool  directory_exists(STRING dir_path){
 
     @return Not zero on success.
 */
-STRING get_parent_dir(CSTRREF dir){
+STRING get_parent_dir(CSTRREF dir) {
     const std::regex e1("^\\/[^\\/]*($|\\/$)");
     const std::regex e2("\\/[^\\/]*($|\\/$)");
     if (dir.empty() || dir == "/" || dir[0] != '/')
@@ -164,17 +181,15 @@ STRING get_parent_dir(CSTRREF dir){
     else if (std::regex_match(dir, e1))
         return "/";
     else
-        return std::regex_replace (dir, e2, "");
+        return std::regex_replace(dir, e2, "");
 }
 
-STRING _discover_file(CSTRREF dir, CSTRREF filename){
-    if (!directory_exists(dir.c_str()) || dir.empty()){
+STRING _discover_file(CSTRREF dir, CSTRREF filename) {
+    if (!directory_exists(dir.c_str()) || dir.empty()) {
         return "";
-    }
-    else if (file_exists(dir, filename)){
+    } else if (file_exists(dir, filename)) {
         return dir + "/" + filename;
-    }
-    else {
+    } else {
         auto parent_dir = get_parent_dir(dir);
         if (!parent_dir.empty())
             return _discover_file(parent_dir, filename);
@@ -184,7 +199,7 @@ STRING _discover_file(CSTRREF dir, CSTRREF filename){
     }
 }
 
-STRING discover_file(CSTRREF filename){
+STRING discover_file(CSTRREF filename) {
     return _discover_file(current_dir(), filename);
 }
 
@@ -206,9 +221,9 @@ rapidjson::Document make_json_document_from_file(CSTRREF filename) {
 }
 
 
-STRVEC discover_all_python_files(CSTRREF root){
+STRVEC discover_all_python_files(CSTRREF root) {
     STRVEC filenames;
-    for( const auto& dir: get_directories(root)){
+    for (const auto &dir: get_directories(root)) {
         auto files = discover_all_python_files(dir);
         filenames.insert(filenames.end(), files.begin(), files.end());
     }
@@ -218,19 +233,18 @@ STRVEC discover_all_python_files(CSTRREF root){
 }
 
 
-void create_dag(){
+void create_dag() {
     auto settings = Settings::obj();
     CSTRING output_filename = settings.get_dependencies_filename();
     FILE *f = fopen(output_filename.c_str(), "w");
-    if (f == NULL)
-    {
+    if (f == NULL) {
         std::cerr << "Error creating the output file: " << output_filename << std::endl;
         exit(1);
     }
     fprintf(f, "node1, node2\n");
     auto files = discover_all_python_files(settings.get_project_root());
     int i = 0;
-    for(auto fn: files){
+    for (auto fn: files) {
         ++i;
         parse_file(fn, f);
     }
@@ -238,13 +252,13 @@ void create_dag(){
     fclose(f);
 }
 
-STRVEC _get_tokens(char* buffer){
+STRVEC _get_tokens(char *buffer) {
     STRVEC v;
     auto token = strtok(BUFFER, DELIMETER);
-    while(token) {
+    while (token) {
         STRING strg(token);
-        if (!strg.empty() && strg[strg.length()-1] == '\n') {
-            strg.erase(strg.length()-1);
+        if (!strg.empty() && strg[strg.length() - 1] == '\n') {
+            strg.erase(strg.length() - 1);
         }
         v.push_back(strg);
         token = strtok(NULL, DELIMETER);
@@ -252,41 +266,73 @@ STRVEC _get_tokens(char* buffer){
     return move(v);
 }
 
-DEPENDENCY_GRAPH load_dependency_graph(){
+DEPENDENCY_GRAPH load_dependency_graph() {
     DEPENDENCY_GRAPH graph;
     const auto dependency_filename = Settings::obj().get_dependencies_filename();
     FILE *fp = fopen(dependency_filename.c_str(), "r");
-    while (fgets(BUFFER, BUFFER_SIZE, fp)){
+    while (fgets(BUFFER, BUFFER_SIZE, fp)) {
         auto tokens = _get_tokens(BUFFER);
-        if (tokens.size() >=2){
-            auto node_1 = tokens[0];
-            auto node_2 = tokens[1];
-            if(node_1.find("\\") != STRING::npos){
-                printf("Here\n");
-            }
-            if ( graph.find(node_1) == graph.end() ) {
+        if (tokens.size() >= 2) {
+            auto node_1 = trimed(tokens[0]);
+            auto node_2 = trimed(tokens[1]);
+
+            if (graph.find(node_1) == graph.end()) {
                 graph[node_1] = STRVEC();
             }
-            if ( graph.find(node_2) == graph.end() ) {
+            if (graph.find(node_2) == graph.end()) {
                 graph[node_2] = STRVEC();
             }
+
             graph[node_1].push_back(node_2);
         }
     }
     return move(graph);
 }
 
-DEPENDENCY_GRAPH load_dependency_graph2(){
-    DEPENDENCY_GRAPH graph;
-    const auto dependency_filename = Settings::obj().get_dependencies_filename();
-    FILE *fp = fopen(dependency_filename.c_str(), "r");
-    while (fgets(BUFFER, BUFFER_SIZE, fp)){
-        auto token = strtok(BUFFER, DELIMETER);
-        while(token) {
-            printf( "%s", token );
-            token = strtok(NULL, DELIMETER);
-        }
-        printf( "\n");
-    }
-    return move(graph);
+void ltrim(STRINGREF str_to_ltrim) {
+    auto from_iter = str_to_ltrim.begin();
+    auto to_iter = std::find_if(
+            str_to_ltrim.begin(),
+            str_to_ltrim.end(),
+            [](unsigned char ch) {
+                return !std::isspace(ch);
+            }
+            );
+    str_to_ltrim.erase(from_iter, to_iter);
+}
+
+STRING ltrimed(CSTRREF s) {
+    auto s1{s};
+    ltrim(s1);
+    return move(s1);
+}
+
+
+void rtrim(STRINGREF s) {
+    auto from_iter = std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base();
+    auto to_iter = s.end();
+    s.erase(from_iter, to_iter);
+}
+
+STRING rtrimed(CSTRREF s) {
+    auto s1{s};
+    rtrim(s1);
+    return move(s1);
+}
+
+void trim(STRINGREF s){
+    ltrim(s);
+    rtrim(s);
+}
+
+STRING trimed(CSTRREF s) {
+    auto s1{s};
+    trim(s1);
+    return move(s1);
+}
+
+void walk_dependencies(CSTRREF node, const DEPENDENCY_GRAPH& dependecies){
+
 }
