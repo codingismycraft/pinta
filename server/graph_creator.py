@@ -31,6 +31,18 @@ def get_dependency_graph(node):
     g = _make_graph()
     edges, direct_dependencies = _all_dependencies(node, g)
 
+    if not edges:
+        return [
+            {
+                "id": 1,
+                "label": "",
+                "title": node,
+                "value": 1,
+                "color": "blue"
+            }
+        ], [], []
+
+
     all_nodes = set()
     for n1, n2 in edges:
         all_nodes.add(n1)
@@ -80,7 +92,7 @@ def get_dependency_graph(node):
             },
         )
 
-    return list(node_to_info.values()), edges_representation, direct_dependencies
+    return list(node_to_info.values()), edges_representation, sorted(direct_dependencies)
 
 
 def _create_graph_from_edges(edges):

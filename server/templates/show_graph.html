@@ -1,12 +1,39 @@
+<!DOCTYPE html>
+
 <html>
 <head>
     <script type="text/javascript"
-            src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js">
-    </script>
+            src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>{{ doc_title}}</title>
 </head>
 <body>
-module: {{ filepath }} nodes: {{ number_of_nodes }} edges: {{ number_of_edges }} direct dependencies: {{ direct_dependencies }}
-<div id="mynetwork"></div>
+
+
+<div id="container">
+    <div id="top">
+        <div class="logo"> Pinta</div>
+        <div class="header_info">
+            <span><label>Dependencies for</label><value>{{ filepath }}</value></span>
+            <span><label>Nodes</label><value>{{ number_of_nodes }}</value></span>
+            <span><label>Edges</label><value>{{ number_of_edges }}</value></span>
+            <span><label>Directly Connected</label><value>{{ direct_dependencies_count }}</value></span>
+        </div>
+    </div>
+    <div id="left">
+        <div><value>Directly Connected</value></div>
+        <br>
+        {% for module, filename in direct_dependencies %}
+            <li>
+                <a href="{{ filename }}" style="text-decoration: none;"  target="_blank" >
+                    {{ module }}
+                </a>
+            </li>
+        {% endfor %}
+    </div>
+
+    <div id="right"></div>
+</div>
 
 <script type="text/javascript">
     var nodes_to_use = JSON.parse('{{ nodes_to_use|safe }}');
@@ -14,7 +41,7 @@ module: {{ filepath }} nodes: {{ number_of_nodes }} edges: {{ number_of_edges }}
     var nodes = new vis.DataSet(nodes_to_use);
     var edges = new vis.DataSet(edges_to_use);
 
-    var container = document.getElementById('mynetwork');
+    var container = document.getElementById('right');
 
     var data = {
         nodes: nodes,

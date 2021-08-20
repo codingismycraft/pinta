@@ -1,5 +1,69 @@
-#mynetwork {
-    width: 800px;
-    height: 800px;
-    border: 1px solid lightgray;
+html, body {
+    height: 100%;
+    margin: 0px;
+    background: whitesmoke;
+}
+
+body.waiting * {
+    cursor: progress;
+}
+
+#container {
+    top: 0px;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 100%;
+}
+
+#top, #left, #right {
+    position: absolute
+}
+
+#top {
+    top: 0;
+    width: 100%;
+    height: 70px;
+    background: #12232E;
+}
+
+#left {
+    top: 72px;
+    width: 450px;
+    bottom: 0px;
+    background: gainsboro;
+    font-size: small;
+}
+
+#right {
+    top: 72px;
+    left: 450px;
+    right: 0;
+    bottom: 0px;
+    background: ghostwhite;
+}
+
+
+.logo {
+    font-weight: bold;
+    color: #EEFBFB;
+    width: 25%;
+    float: left;
+    padding-top: 18px;
+    padding-left: 18px;
+}
+
+.header_info{
+    margin-top: 15px;
+}
+
+label {
+     color: #EEFBFB;
+     padding-left: 9px;
+     padding-right: 6px;
+ }
+
+value {
+    background-color: #007CC7;
+    padding: 8px
 }
