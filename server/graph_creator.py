@@ -134,15 +134,3 @@ def _make_graph():
                 g[n2] = []
             g[n1].append(n2)
     return g
-
-
-if __name__ == '__main__':
-    #nodes, edges = get_dependency_graph("pants.libs.rockport_puller.rockport_puller")
-
-    #nodes, edges = get_dependency_graph('pants.libs.rapidlib.orion.decorators')
-    nodes, edges = get_dependency_graph('pants.libs.rapidlib.async_laika.async_laika')
-
-
-
-    for e in edges:
-        print(e)
