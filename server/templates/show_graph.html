@@ -5,10 +5,9 @@
     <script type="text/javascript"
             src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <title>{{ doc_title}}</title>
+    <title>{{ doc_title }}</title>
 </head>
-<body>
-
+<body onload="prepare_tabs()">
 
 <div id="container">
     <div id="top">
@@ -22,21 +21,80 @@
         </div>
     </div>
     <div id="left">
-        <div><value>Directly Connected</value></div>
-        <br>
-        {% for module, filename in direct_dependencies %}
-            <li>
-                <a href="{{ filename }}" style="text-decoration: none;"  target="_blank" >
-                    {{ module }}
-                </a>
-            </li>
-        {% endfor %}
+        <div class="wrapper">
+            <div class="buttonWrapper">
+                <button class="tab-button active"
+                        style="border-top-left-radius: 10px;"
+                        data-id="direct_connections">Direct Connections
+                </button>
+                <button class="tab-button" style="border-top-left-radius: 10px;"
+                        data-id="targets">Affected targets
+                </button>
+                <button class="tab-button" style="border-top-left-radius: 10px;"
+                        data-id="module_stats">Stats
+                </button>
+                <hr>
+            </div>
+
+            <div class="contentWrapper">
+                <p class="content active" id="direct_connections">
+                    {% for module, filename in direct_dependencies %}
+                        <a href="{{ filename }}"
+                           style="text-decoration: none;"
+                           title={{ filename }}
+                           target="_blank">
+                            {{ module }}
+                        </a>
+                        <br>
+                    {% endfor %}
+                </p>
+                <p class="content" id="targets">
+                    {% for target, filename in affected_targets %}
+                        <a href="{{ filename }}"
+                           style="text-decoration: none;pointer-events: none;"
+                           title={{ filename }}
+                           target="_blank">
+                            {{ target }}
+                        </a>
+                        <br>
+                    {% endfor %}
+
+                </p>
+                <p class="content" id="module_stats">
+                    nothing yet
+                </p>
+            </div>
+        </div>
+
+
     </div>
 
     <div id="right"></div>
 </div>
 
 <script type="text/javascript">
+
+    function prepare_tabs() {
+        const tabs = document.querySelector(".wrapper");
+        const tabButton = document.querySelectorAll(".tab-button");
+        const contents = document.querySelectorAll(".content");
+        tabs.onclick = e => {
+            const id = e.target.dataset.id;
+            if (id) {
+                tabButton.forEach(btn => {
+                    btn.classList.remove("active");
+                });
+                e.target.classList.add("active");
+
+                contents.forEach(content => {
+                    content.classList.remove("active");
+                });
+                const element = document.getElementById(id);
+                element.classList.add("active");
+            }
+        }
+    }
+
     var nodes_to_use = JSON.parse('{{ nodes_to_use|safe }}');
     var edges_to_use = JSON.parse('{{ edges_to_use|safe }}');
     var nodes = new vis.DataSet(nodes_to_use);

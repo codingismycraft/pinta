@@ -60,6 +60,31 @@ def _get_targets():
     return [_get_module_from_path(line.strip()) for line in lines]
 
 
+def _abbreviate_module_name(module_name):
+    """Abbreviates the passed in module_name.
+
+    :param str module_name: The full module_name to abbreviate.
+
+    :return: The abbreviated module name.
+    :rtype: str.
+    """
+    tokens = module_name.split('.')
+    return tokens[-1]
+
+
+def _get_target_name(module_name):
+    """Returns the target_name.
+
+    :param str module_name: The full module_name of the target.
+
+
+    :return: The target name.
+    :rtype: str.
+    """
+    tokens = module_name.split('.')
+    return tokens[-1].replace("_target", "")
+
+
 @app.route("/<path:varargs>")
 def data(varargs=None):
     """Returns a webpage with the dependencies for the requested file."""
@@ -77,9 +102,18 @@ def data(varargs=None):
         doc_title = doc_title.split('.')[-1]
 
     direct_dependencies = [
-        (dd, _get_path_from_module(dd))
+        (_abbreviate_module_name(dd), _get_path_from_module(dd))
         for dd in direct_dependencies
     ]
+
+    affected_targets = [
+        (_get_target_name(trgt), _get_path_from_module(trgt))
+        for trgt in affected_targets
+    ]
+
+    affected_targets.sort(key=lambda trgt: trgt[0])
+    direct_dependencies.sort(key=lambda trgt: trgt[0])
+
 
     return render_template(
         'show_graph.html',
