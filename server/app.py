@@ -1,5 +1,6 @@
 """Simple server to display code dependencies."""
 
+import os
 import json
 
 from flask import Flask
@@ -51,14 +52,22 @@ def _get_path_from_module(module):
     return filepath
 
 
+def _get_targets():
+    cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
+    os.system(cmd)
+    lines = open('tmp', 'r').readlines()
+    os.remove("tmp")
+    return [_get_module_from_path(line.strip()) for line in lines]
+
+
 @app.route("/<path:varargs>")
 def data(varargs=None):
     """Returns a webpage with the dependencies for the requested file."""
     varargs = varargs.split("/")
     filepath = '/'.join(varargs)
     module_name = _get_module_from_path(filepath)
-    nodes_to_use, edges_to_use, direct_dependencies = graph_creator.get_dependency_graph(
-        module_name)
+    nodes_to_use, edges_to_use, direct_dependencies, affected_targets = \
+        graph_creator.get_dependency_graph(module_name, _get_targets())
 
     number_of_nodes = len(nodes_to_use)
     number_of_edges = len(edges_to_use)
@@ -81,7 +90,9 @@ def data(varargs=None):
         number_of_nodes=number_of_nodes,
         number_of_edges=number_of_edges,
         direct_dependencies_count=len(direct_dependencies),
-        direct_dependencies=direct_dependencies
+        direct_dependencies=direct_dependencies,
+        affected_targets_count=len(affected_targets),
+        affected_targets=affected_targets
     )
 
 

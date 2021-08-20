@@ -8,7 +8,6 @@ import settings
 # Aliases.
 settings = settings.settings
 
-
 GraphInfo = collections.namedtuple(
     "GraphInfo",
     [
@@ -19,29 +18,33 @@ GraphInfo = collections.namedtuple(
 )
 
 
-
-def get_dependency_graph(node):
+def get_dependency_graph(node, targets=None):
     """Returns the dependent nodes and the edges for the passed in node.
 
     :param str node: The node to get dependencies for.
+    :param list targets: A list with the modules that are used as targets.
 
-    :return: A tuple consisting of the nodes and the edges.
-    :rtype: tuple[list, list]
+    :return: A tuple consisting of the nodes and the edges and the affected
+    targets.
+    :rtype: tuple[list, list, list]
     """
     g = _make_graph()
     edges, direct_dependencies = _all_dependencies(node, g)
+    if targets:
+        targets = set(targets)
+
+    affected_targets = []
 
     if not edges:
         return [
-            {
-                "id": 1,
-                "label": "",
-                "title": node,
-                "value": 1,
-                "color": "blue"
-            }
-        ], [], []
-
+                   {
+                       "id": 1,
+                       "label": "",
+                       "title": node,
+                       "value": 1,
+                       "color": "blue"
+                   }
+               ], [], []
 
     all_nodes = set()
     for n1, n2 in edges:
@@ -59,10 +62,13 @@ def get_dependency_graph(node):
                 "value": 1,
                 "color": "blue"
             }
+            if targets and node_name in targets:
+                node_to_info[node_name]["color"] = 'orange'
+                node_to_info[node_name]["value"] = 3
+                affected_targets.append(node_name)
 
     node_to_info[node]['color'] = 'red'
     node_to_info[node]['value'] = 3
-
 
     edges_representation = []
     for n1, n2 in edges:
@@ -92,7 +98,11 @@ def get_dependency_graph(node):
             },
         )
 
-    return list(node_to_info.values()), edges_representation, sorted(direct_dependencies)
+
+    return list(node_to_info.values()), \
+           edges_representation, \
+           sorted(direct_dependencies), \
+           affected_targets
 
 
 def _create_graph_from_edges(edges):
