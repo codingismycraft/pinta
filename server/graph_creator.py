@@ -1,11 +1,23 @@
 """Creates the dependency list."""
 
 import csv
+import collections
 
 import settings
 
 # Aliases.
 settings = settings.settings
+
+
+GraphInfo = collections.namedtuple(
+    "GraphInfo",
+    [
+        "nodes",
+        "edges",
+        "direct_dependencies"
+    ]
+)
+
 
 
 def get_dependency_graph(node):
@@ -17,7 +29,7 @@ def get_dependency_graph(node):
     :rtype: tuple[list, list]
     """
     g = _make_graph()
-    edges = _all_dependencies(node, g)
+    edges, direct_dependencies = _all_dependencies(node, g)
 
     all_nodes = set()
     for n1, n2 in edges:
@@ -45,7 +57,6 @@ def get_dependency_graph(node):
         index1 = node_to_info[n1]["id"]
         index2 = node_to_info[n2]["id"]
 
-
         edge_color = 'gray'
         value = 1
         if n1 == node:
@@ -69,7 +80,7 @@ def get_dependency_graph(node):
             },
         )
 
-    return list(node_to_info.values()), edges_representation
+    return list(node_to_info.values()), edges_representation, direct_dependencies
 
 
 def _create_graph_from_edges(edges):
@@ -98,20 +109,27 @@ def _all_dependencies(node, dg):
     :param str node: The node to lookup dependencies for.
     :param dict dg: The graph to lookup.
 
-    :return: A list of pairs from parent to child dependencies.
-    :rtype: list[tuple[str, str]]
+    :return: Tuple of a list of pairs from parent to child dependencies and
+        the list of direct_dependencies.
+    :rtype: list[tuple[str, str]], list
     """
-    visited = set(node)
+    visited = set()
     queue = [node]
     edges = []
+    direct_dependencies = []
     while queue:
         current_node = queue.pop(0)
+        if current_node in visited:
+            continue
         for child in dg[current_node]:
+            assert child != current_node
             if child not in visited:
                 edges.append((current_node, child))
+                if current_node == node:
+                    direct_dependencies.append(child)
                 queue.append(child)
         visited.add(current_node)
-    return edges
+    return edges, direct_dependencies
 
 
 def _make_graph():

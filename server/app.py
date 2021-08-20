@@ -39,13 +39,24 @@ def data(varargs=None):
     varargs = varargs.split("/")
     filepath = '/'.join(varargs)
     module_name = _get_module_from_path(filepath)
-    nodes_to_use, edges_to_use = graph_creator.get_dependency_graph(module_name)
+    nodes_to_use, edges_to_use, direct_dependencies = graph_creator.get_dependency_graph(module_name)
+
+    number_of_nodes = len(nodes_to_use)
+    number_of_edges = len(edges_to_use)
+
+    # print("==================")
+    # for edge in edges_to_use:
+    #     print(edge)
+    # print("==================")
 
     return render_template(
         'show_graph.html',
         filepath=module_name,
         nodes_to_use=json.dumps(nodes_to_use),
-        edges_to_use=json.dumps(edges_to_use)
+        edges_to_use=json.dumps(edges_to_use),
+        number_of_nodes=number_of_nodes,
+        number_of_edges=number_of_edges,
+        direct_dependencies=len(direct_dependencies)
     )
 
 
