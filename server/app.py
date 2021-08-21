@@ -93,6 +93,7 @@ def _get_target_name(module_name):
 @app.route("/<path:varargs>")
 def data(varargs=None):
     """Returns a webpage with the dependencies for the requested file."""
+    os.system(settings.pinta_executable)
     varargs = varargs.split("/")
 
     filepath = '/'.join(varargs)

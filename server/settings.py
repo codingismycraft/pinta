@@ -10,19 +10,21 @@ class _Settings:
     _project_root = None
     _include_root = None
     _dependencies_filename = None
+    _pinta_executable = None
 
     def __init__(self):
         """Initializer.
 
         Loads the settings using the pinta configuration file.
         """
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dir_path, "..", "pinta", "depender.json")
+        home_dir = os.path.expanduser("~")
+        filename = os.path.join(home_dir, ".pinta", "pinta_conf.json")
         with open(filename) as json_file:
             data = json.load(json_file)
             self._project_root = data["project_root"]
             self._include_root = data["include_root"]
             self._dependencies_filename = data["dependencies_filename"]
+        self._pinta_executable = os.path.join(home_dir, ".pinta", "pinta")
 
     @property
     def project_root(self):
@@ -50,6 +52,15 @@ class _Settings:
         :rtype: str.
         """
         return self._dependencies_filename
+
+    @property
+    def pinta_executable(self):
+        """Returns the path to the pinta executable.
+
+        :return: The path to the pinta executable.
+        :rtype: str.
+        """
+        return self._pinta_executable
 
 
 settings = _Settings()
