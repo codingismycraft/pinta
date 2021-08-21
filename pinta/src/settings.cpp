@@ -2,12 +2,22 @@
 
 #include "settings.h"
 #include "utils.h"
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 #include <iostream>
 
-#define CONFIG_FILENAME "depender.json"
+#define CONFIG_FILENAME ".pinta/pinta_conf.json"
 
 Settings::Settings()  {
-    auto full_path = discover_file(CONFIG_FILENAME);
+    const STRING home_dir = get_home_dir();
+
+    if(not file_exists(home_dir, CONFIG_FILENAME)){
+        std::cerr << "Configuration file: " << home_dir
+                  << CONFIG_FILENAME << " does not exist." << std::endl;
+        exit(-1);
+    }
+    auto full_path = home_dir + "/" + CONFIG_FILENAME;
     auto settings = make_json_document_from_file(full_path);
 
     _project_root = settings["project_root"].GetString();

@@ -9,3 +9,7 @@ include_directories(${RAPIDJSON_DIR})
 include_directories(${INCLUDE_DIR})
 
 add_executable(pinta main.cpp include/utils.h src/utils.cpp include/std_include.h include/settings.h src/settings.cpp)
+
+add_custom_command(TARGET pinta
+        POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:pinta> /home/john/.pinta)

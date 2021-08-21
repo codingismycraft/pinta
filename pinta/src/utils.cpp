@@ -20,6 +20,7 @@
 #include <stdbool.h>
 #include <set>
 #include <queue>
+#include <pwd.h>
 
 #define BUFFER_SIZE 32000
 #define DELIMETER ","
@@ -120,7 +121,7 @@ void parse_file(CSTRREF fullpath, FILE *output) {
     assert(fp != NULL);
     STRING carryover_line = "";
     std::regex ends_with_continuation(R"(.*\\\n)");
-    
+
     while (fgets(BUFFER, BUFFER_SIZE, fp)) {
         std::string s(BUFFER);
         ltrim(s);
@@ -246,7 +247,6 @@ void create_dag() {
         ++i;
         parse_file(fn, f);
     }
-    std::cout << i << std::endl;
     fclose(f);
 }
 
@@ -357,4 +357,12 @@ std::vector<std::pair<STRING, STRING>> walk_dependencies(CSTRREF node, DEPENDENC
     }
 
     return edges;
+}
+
+STRING get_home_dir(){
+    const char *psz_homedir;
+    if ((psz_homedir = getenv("HOME")) == NULL) {
+        psz_homedir = getpwuid(getuid())->pw_dir;
+    }
+    return STRING (psz_homedir);
 }
