@@ -34,7 +34,7 @@ button {
     margin-bottom: 0px;
 }
 
-hr{
+hr {
     margin-top: 0px;
 }
 
@@ -161,4 +161,32 @@ a {
     font-weight: bold;
     font-family: "Arial";
     font-size: medium;
+}
+
+
+/*table {*/
+/*    border-collapse: collapse;*/
+/*    border: 1px solid #595757;*/
+/*}*/
+
+/*table td {*/
+/*    border: 1px solid #595757;*/
+/*}*/
+
+table, th, td {
+  border-collapse: collapse;
+  border: 1px solid #595757;
+}
+
+th {
+    font-size: larger;
+    color: #ff8a00;
+}
+
+.align_center {
+  text-align: center;
+}
+
+td{
+    padding-left: 5px;
 }

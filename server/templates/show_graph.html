@@ -25,7 +25,7 @@
             <div class="buttonWrapper">
                 <button class="tab-button active"
                         style="border-top-left-radius: 10px;"
-                        data-id="direct_connections">Direct Connections
+                        data-id="direct_connections">Adjacent Nodes
                 </button>
                 <button class="tab-button" style="border-top-left-radius: 10px;"
                         data-id="targets">Affected targets
@@ -37,17 +37,24 @@
             </div>
 
             <div class="contentWrapper">
-                <p class="content active" id="direct_connections">
+                <div class="content active" id="direct_connections">
+                <table style="width: 100%;">
+                    <tr><th>Adjacent Modules</th></tr>
                     {% for module, filename in direct_dependencies %}
+                        <tr>
+                        <td>
                         <a href="{{ filename }}"
                            style="text-decoration: none;"
                            title={{ filename }}>
                             {{ module }}
                         </a>
-                        <br>
+                        </td>
+                        </tr>
                     {% endfor %}
-                </p>
-                <p class="content" id="targets">
+                </table>
+
+                </div>
+                <div class="content" id="targets">
                     {% for target, filename in affected_targets %}
                         <a href="{{ filename }}"
                            style="text-decoration: none;pointer-events: none;"
@@ -58,26 +65,34 @@
                         <br>
                     {% endfor %}
 
-                </p>
-                <p class="content" id="module_stats">
+                </div>
+                <div class="content" id="module_stats">
                     <span>
                         {% for stat_name, stat_value in graph_stats %}
                             <span class="statistic_name">{{ stat_name }}</span>
                             <span class="statistic_value">{{ stat_value }}</span>
                             <br>
                         {% endfor %}
-
-                        {% for target in all_targets %}
-                            <span class="statistic_name">{{ target.target_name }}</span>
-                            <span class="statistic_value">{{ target.reversed_dependencies_count }}</span>
-                            <br>
-                        {% endfor %}
+                        <span class="statistic_name">All Targets</span>
+                        <span class="statistic_value">{{ all_targets | length }}</span>
+                        <hr/>
+                        <br/>
+                        <table>
+                            <tr>
+                                <th>Target</th>
+                                <th>Out Connections</th>
+                            </tr>
+                            {% for target in all_targets %}
+                                <tr>
+                                    <td>{{ target.target_name }}</td>
+                                    <td class="align_center">{{ target.reversed_dependencies_count }}</td>
+                                </tr>
+                            {% endfor %}
+                    </table>
                 </span>
-                </p>
+                </div>
             </div>
         </div>
-
-
     </div>
 
     <div id="right"></div>
