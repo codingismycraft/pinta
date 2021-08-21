@@ -2,6 +2,8 @@
 
 import os
 import settings
+
+import exceptions
 import reversed_dependencies
 
 # Aliases.
@@ -9,7 +11,7 @@ settings = settings.settings
 ReverseDependencies = reversed_dependencies.ReverseDependencies
 
 
-class Target:
+class _Target:
     """Holds the reversed dependencies for a module.
 
     :ivar str _filename: The full path to the target.
@@ -88,19 +90,50 @@ class Target:
                f' ({self._reversed_dependencies_count})'
 
 
-def get_all_targets():
-    """Returns all the targets sorted by reversed_dependency count.
+class Targets:
+    """Holds all targets.
 
-    :return: A list of Target instances.
-    :rtype: list[Target]
+    :ivar dict targets: Maps target name to its Target object.
     """
-    rd = ReverseDependencies(settings.dependencies_filename)
-    cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
-    os.system(cmd)
-    lines = open('tmp', 'r').readlines()
-    os.remove("tmp")
-    targets = [Target(rd, filename=line) for line in lines]
-    return sorted(
-        targets,
-        key=lambda x: x.reversed_dependencies_count, reverse=True
-    )
+
+    _targets = None
+
+    def __init__(self):
+        """Initializer."""
+        self._load_all_targets()
+
+    def _load_all_targets(self):
+        """Loads all targets."""
+        rd = ReverseDependencies(settings.dependencies_filename)
+        cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
+        os.system(cmd)
+        lines = open('tmp', 'r').readlines()
+        os.remove("tmp")
+
+        self._targets = {}
+        for line in lines:
+            target = _Target(rd, filename=line)
+            self._targets[target.filename] = target
+
+    def get_target_by_filename(self, target_filename):
+        """Returns the target instance for the passed-in target name.
+
+        :param str target_filename: The filename to the target.
+        :return:
+        """
+        if target_filename in self._targets:
+            return self._targets[target_filename]
+        else:
+            raise exceptions.TargetNotFound
+
+    def get_all(self):
+        """Returns all the targets sorted by reversed_dependency count.
+
+        :return: A list of Target instances.
+        :rtype: list[_Target]
+        """
+        targets = list(self._targets.values())
+        return sorted(
+            targets,
+            key=lambda x: x.reversed_dependencies_count, reverse=True
+        )

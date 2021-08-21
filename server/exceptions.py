@@ -7,3 +7,7 @@ class PintaServerException(Exception):
 
 class NoDependenciesFound(PintaServerException):
     """No dependencies found."""
+
+
+class TargetNotFound(PintaServerException):
+    """Target not found."""

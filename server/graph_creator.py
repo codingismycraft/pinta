@@ -4,6 +4,7 @@ import csv
 import collections
 import exceptions
 
+import disconnected_graph
 import settings
 
 # Aliases.
@@ -16,7 +17,8 @@ GraphInfo = collections.namedtuple(
         "edges",
         "direct_dependencies",
         "affected_targets",
-        "graph_stats"
+        "graph_stats",
+        "disconnected_subgraphs"
     ]
 )
 
@@ -34,7 +36,6 @@ def _make_graph_stats(graph):
     for edges in graph.values():
         edge_count += len(edges)
 
-
     return [
         ("Nodes", f'{len(graph):,}'),
         ("Edges", f'{edge_count:,}'),
@@ -51,6 +52,7 @@ def get_dependency_graph(node, targets=None):
     :rtype: GraphInfo
     """
     g = _make_graph()
+    disconnected_subgraphs = _get_disconnected_subgraphs(g)
     edges, direct_dependencies = _all_dependencies(node, g)
 
     if targets:
@@ -118,7 +120,8 @@ def get_dependency_graph(node, targets=None):
         edges=edges_representation,
         direct_dependencies=sorted(direct_dependencies),
         affected_targets=affected_targets,
-        graph_stats=_make_graph_stats(g)
+        graph_stats=_make_graph_stats(g),
+        disconnected_subgraphs=disconnected_subgraphs
     )
     return info
 
@@ -193,3 +196,27 @@ def _make_graph():
                 g[n2] = []
             g[n1].append(n2)
     return g
+
+
+def _get_disconnected_subgraphs(graph):
+    """Returns the the disconnected subgraphs.
+
+    :param dict graph: The graph to search for subgraphs.
+
+    :return: A tuple of the nodes count and indicative_module for each subgraph.
+    :rtype: list[Tuple[int, str]].
+    """
+    subgraphs = disconnected_graph.find_disconnected_graphs(graph)
+    indicative_modules = []
+    for subgraph in subgraphs:
+        indicative_module = None
+        counter = -1
+        for key, values in subgraph.items():
+            if counter < len(values):
+                indicative_module = key
+                counter = len(values)
+        indicative_modules.append((len(subgraph), indicative_module))
+    return indicative_modules
+
+
+

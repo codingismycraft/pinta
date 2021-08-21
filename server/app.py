@@ -15,6 +15,7 @@ import targets
 # Aliases.
 settings = settings.settings
 ReverseDependencies = reversed_dependencies.ReverseDependencies
+Targets = targets.Targets
 
 app = Flask(__name__)
 
@@ -113,12 +114,22 @@ def data(varargs=None):
         for dd in info.direct_dependencies
     ]
 
-    affected_targets = [
-        (_get_target_name(trgt), _get_path_from_module(trgt))
-        for trgt in info.affected_targets
-    ]
+    all_targets = Targets()
 
-    affected_targets.sort(key=lambda trgt: trgt[0])
+    affected_targets = []
+    for trgt in info.affected_targets:
+        filename = _get_path_from_module(trgt)
+        try:
+            affected_target = all_targets.get_target_by_filename(filename)
+            affected_targets.append(affected_target)
+        except exceptions.TargetNotFound:
+            print(f"Target: {filename} not found.")
+
+    affected_targets = sorted(
+        affected_targets,
+        key=lambda x: x.reversed_dependencies_count, reverse=True
+    )
+
     direct_dependencies.sort(key=lambda trgt: trgt[0])
 
     return render_template(
@@ -134,7 +145,8 @@ def data(varargs=None):
         affected_targets_count=len(affected_targets),
         affected_targets=affected_targets,
         graph_stats=info.graph_stats,
-        all_targets=targets.get_all_targets()
+        all_targets=all_targets.get_all(),
+        disconnected_subgraphs=info.disconnected_subgraphs
     )
 
 

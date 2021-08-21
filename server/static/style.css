@@ -153,25 +153,35 @@ a {
 
 
 .statistic_name {
+    display: inline-block;
     color: gray;
+    width: 50%;
+    text-align: right;
 }
 
 .statistic_value {
+    display: inline-block;
     color: #3CAEA3;
     font-weight: bold;
     font-family: "Arial";
     font-size: medium;
+    width: 30%;
 }
 
+.stats_title{
+    display: inline-block;
+    color: #212121;
+    background-color: #a95907;
+    width: 100%;
+    text-align: center;
+    font-size: larger;
+    font-weight: bold;
+    padding-top:3px;
+    padding-bottom: 3px;
+    margin-bottom: 1px;
+    margin-top: 8px;
+}
 
-/*table {*/
-/*    border-collapse: collapse;*/
-/*    border: 1px solid #595757;*/
-/*}*/
-
-/*table td {*/
-/*    border: 1px solid #595757;*/
-/*}*/
 
 table, th, td {
   border-collapse: collapse;
@@ -180,7 +190,7 @@ table, th, td {
 
 th {
     font-size: larger;
-    color: #ff8a00;
+    color: #a95907;
 }
 
 .align_center {
@@ -190,3 +200,4 @@ th {
 td{
     padding-left: 5px;
 }
+
