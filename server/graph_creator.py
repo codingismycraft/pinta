@@ -2,6 +2,7 @@
 
 import csv
 import collections
+import exceptions
 
 import settings
 
@@ -27,24 +28,19 @@ def get_dependency_graph(node, targets=None):
     :return: A tuple consisting of the nodes and the edges and the affected
     targets.
     :rtype: tuple[list, list, list]
+
+    :raise: exceptions.NoDependenciesFound
     """
     g = _make_graph()
     edges, direct_dependencies = _all_dependencies(node, g)
+
     if targets:
         targets = set(targets)
 
     affected_targets = []
 
     if not edges:
-        return [
-                   {
-                       "id": 1,
-                       "label": "",
-                       "title": node,
-                       "value": 1,
-                       "color": "blue"
-                   }
-               ], [], []
+        raise exceptions.NoDependenciesFound
 
     all_nodes = set()
     for n1, n2 in edges:
@@ -97,7 +93,6 @@ def get_dependency_graph(node, targets=None):
                 "value": value
             },
         )
-
 
     return list(node_to_info.values()), \
            edges_representation, \

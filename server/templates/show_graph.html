@@ -41,8 +41,7 @@
                     {% for module, filename in direct_dependencies %}
                         <a href="{{ filename }}"
                            style="text-decoration: none;"
-                           title={{ filename }}
-                           target="_blank">
+                           title={{ filename }}>
                             {{ module }}
                         </a>
                         <br>
@@ -53,7 +52,7 @@
                         <a href="{{ filename }}"
                            style="text-decoration: none;pointer-events: none;"
                            title={{ filename }}
-                           target="_blank">
+                                   target="_blank">
                             {{ target }}
                         </a>
                         <br>
@@ -95,16 +94,15 @@
         }
     }
 
+
     var nodes_to_use = JSON.parse('{{ nodes_to_use|safe }}');
     var edges_to_use = JSON.parse('{{ edges_to_use|safe }}');
-    var nodes = new vis.DataSet(nodes_to_use);
-    var edges = new vis.DataSet(edges_to_use);
-
-    var container = document.getElementById('right');
+    var selected_nodes = new vis.DataSet(nodes_to_use);
+    var selected_edges = new vis.DataSet(edges_to_use);
 
     var data = {
-        nodes: nodes,
-        edges: edges
+        nodes: selected_nodes,
+        edges: selected_edges
     };
 
     var options = {
@@ -341,8 +339,15 @@
             y: undefined
         }
     };
+    var container = document.getElementById('right');
 
-    var network = new vis.Network(container, data, options);
+    if (nodes_to_use.length > 0) {
+        var network = new vis.Network(container, data, options);
+    }
+    else {
+        container.innerText = "No dependencies found.. "
+    }
+
 </script>
 </body>
 </html>

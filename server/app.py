@@ -6,6 +6,7 @@ import json
 from flask import Flask
 from flask import render_template
 
+import exceptions
 import graph_creator
 import settings
 
@@ -89,10 +90,17 @@ def _get_target_name(module_name):
 def data(varargs=None):
     """Returns a webpage with the dependencies for the requested file."""
     varargs = varargs.split("/")
+
     filepath = '/'.join(varargs)
     module_name = _get_module_from_path(filepath)
-    nodes_to_use, edges_to_use, direct_dependencies, affected_targets = \
-        graph_creator.get_dependency_graph(module_name, _get_targets())
+    try:
+        nodes_to_use, edges_to_use, direct_dependencies, affected_targets = \
+            graph_creator.get_dependency_graph(module_name, _get_targets())
+    except exceptions.NoDependenciesFound:
+        nodes_to_use = []
+        edges_to_use = []
+        direct_dependencies = []
+        affected_targets = []
 
     number_of_nodes = len(nodes_to_use)
     number_of_edges = len(edges_to_use)
@@ -113,7 +121,6 @@ def data(varargs=None):
 
     affected_targets.sort(key=lambda trgt: trgt[0])
     direct_dependencies.sort(key=lambda trgt: trgt[0])
-
 
     return render_template(
         'show_graph.html',

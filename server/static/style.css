@@ -46,7 +46,10 @@ button.active {
     text-decoration: underline;
     background: #212121;
     color: #ffffff;
-    box-shadow: inset 0px 3px #ff8a00;
+    /*box-shadow: inset 2px 3px 2px #ff8a00;*/
+    -webkit-box-shadow: 1px 1px 2px 2px #ff8a00;
+    -moz-box-shadow: 1px 1px 2px 2px #ff8a00;
+    box-shadow: 1px 1px 2px 2px #ff8a00;
 }
 
 .active {
@@ -102,7 +105,8 @@ body.waiting * {
     top: 72px;
     width: 450px;
     bottom: 0px;
-    background-color: #7e7d7d;
+    /*background-color: #7e7d7d;*/
+    background-color: #212121;
     font-size: small;
 }
 
