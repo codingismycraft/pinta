@@ -150,3 +150,15 @@ a {
     font-family: "Arial";
     font-size: medium;
 }
+
+
+.statistic_name {
+    color: gray;
+}
+
+.statistic_value {
+    color: #3CAEA3;
+    font-weight: bold;
+    font-family: "Arial";
+    font-size: medium;
+}

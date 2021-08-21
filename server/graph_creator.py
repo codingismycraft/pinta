@@ -14,9 +14,31 @@ GraphInfo = collections.namedtuple(
     [
         "nodes",
         "edges",
-        "direct_dependencies"
+        "direct_dependencies",
+        "affected_targets",
+        "graph_stats"
     ]
 )
+
+
+def _make_graph_stats(graph):
+    """Returns statistics for the passed in graph.
+
+    :param dict graph: The graph to get statistics for.
+
+    :return: The statistics for the passed in graph.
+    :rtype: list[tuple].
+    """
+    edge_count = 0
+
+    for edges in graph.values():
+        edge_count += len(edges)
+
+
+    return [
+        ("Nodes", f'{len(graph):,}'),
+        ("Edges", f'{edge_count:,}'),
+    ]
 
 
 def get_dependency_graph(node, targets=None):
@@ -25,11 +47,8 @@ def get_dependency_graph(node, targets=None):
     :param str node: The node to get dependencies for.
     :param list targets: A list with the modules that are used as targets.
 
-    :return: A tuple consisting of the nodes and the edges and the affected
-    targets.
-    :rtype: tuple[list, list, list]
-
-    :raise: exceptions.NoDependenciesFound
+    :return: The dependency graph info.
+    :rtype: GraphInfo
     """
     g = _make_graph()
     edges, direct_dependencies = _all_dependencies(node, g)
@@ -40,7 +59,7 @@ def get_dependency_graph(node, targets=None):
     affected_targets = []
 
     if not edges:
-        raise exceptions.NoDependenciesFound
+        return GraphInfo([], [], [], [], _make_graph_stats(g))
 
     all_nodes = set()
     for n1, n2 in edges:
@@ -94,10 +113,14 @@ def get_dependency_graph(node, targets=None):
             },
         )
 
-    return list(node_to_info.values()), \
-           edges_representation, \
-           sorted(direct_dependencies), \
-           affected_targets
+    info = GraphInfo(
+        nodes=list(node_to_info.values()),
+        edges=edges_representation,
+        direct_dependencies=sorted(direct_dependencies),
+        affected_targets=affected_targets,
+        graph_stats=_make_graph_stats(g)
+    )
+    return info
 
 
 def _create_graph_from_edges(edges):
@@ -138,14 +161,15 @@ def _all_dependencies(node, dg):
         current_node = queue.pop(0)
         if current_node in visited:
             continue
+        visited.add(current_node)
         for child in dg[current_node]:
-            assert child != current_node
             if child not in visited:
+                assert child != current_node
                 edges.append((current_node, child))
                 if current_node == node:
                     direct_dependencies.append(child)
                 queue.append(child)
-        visited.add(current_node)
+
     return edges, direct_dependencies
 
 

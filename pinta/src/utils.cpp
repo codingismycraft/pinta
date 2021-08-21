@@ -120,12 +120,12 @@ void parse_file(CSTRREF fullpath, FILE *output) {
     assert(fp != NULL);
     STRING carryover_line = "";
     std::regex ends_with_continuation(R"(.*\\\n)");
+    
     while (fgets(BUFFER, BUFFER_SIZE, fp)) {
         std::string s(BUFFER);
-
+        ltrim(s);
         if(s.empty() || s[0] == '#')
             continue;
-
         if(s[0] != 'i' && carryover_line.empty())
             continue;
 

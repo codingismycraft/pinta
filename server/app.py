@@ -8,10 +8,13 @@ from flask import render_template
 
 import exceptions
 import graph_creator
+import reversed_dependencies
 import settings
+import targets
 
 # Aliases.
 settings = settings.settings
+ReverseDependencies = reversed_dependencies.ReverseDependencies
 
 app = Flask(__name__)
 
@@ -54,6 +57,7 @@ def _get_path_from_module(module):
 
 
 def _get_targets():
+    rd = ReverseDependencies(settings.dependencies_filename)
     cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
     os.system(cmd)
     lines = open('tmp', 'r').readlines()
@@ -93,17 +97,11 @@ def data(varargs=None):
 
     filepath = '/'.join(varargs)
     module_name = _get_module_from_path(filepath)
-    try:
-        nodes_to_use, edges_to_use, direct_dependencies, affected_targets = \
-            graph_creator.get_dependency_graph(module_name, _get_targets())
-    except exceptions.NoDependenciesFound:
-        nodes_to_use = []
-        edges_to_use = []
-        direct_dependencies = []
-        affected_targets = []
 
-    number_of_nodes = len(nodes_to_use)
-    number_of_edges = len(edges_to_use)
+    info = graph_creator.get_dependency_graph(module_name, _get_targets())
+
+    number_of_nodes = len(info.nodes)
+    number_of_edges = len(info.edges)
 
     doc_title = module_name
     if '.' in doc_title:
@@ -111,12 +109,12 @@ def data(varargs=None):
 
     direct_dependencies = [
         (_abbreviate_module_name(dd), _get_path_from_module(dd))
-        for dd in direct_dependencies
+        for dd in info.direct_dependencies
     ]
 
     affected_targets = [
         (_get_target_name(trgt), _get_path_from_module(trgt))
-        for trgt in affected_targets
+        for trgt in info.affected_targets
     ]
 
     affected_targets.sort(key=lambda trgt: trgt[0])
@@ -126,14 +124,16 @@ def data(varargs=None):
         'show_graph.html',
         doc_title=doc_title,
         filepath=module_name,
-        nodes_to_use=json.dumps(nodes_to_use),
-        edges_to_use=json.dumps(edges_to_use),
+        nodes_to_use=json.dumps(info.nodes),
+        edges_to_use=json.dumps(info.edges),
         number_of_nodes=number_of_nodes,
         number_of_edges=number_of_edges,
         direct_dependencies_count=len(direct_dependencies),
         direct_dependencies=direct_dependencies,
         affected_targets_count=len(affected_targets),
-        affected_targets=affected_targets
+        affected_targets=affected_targets,
+        graph_stats=info.graph_stats,
+        all_targets=targets.get_all_targets()
     )
 
 

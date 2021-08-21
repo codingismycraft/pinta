@@ -60,7 +60,19 @@
 
                 </p>
                 <p class="content" id="module_stats">
-                    nothing yet
+                    <span>
+                        {% for stat_name, stat_value in graph_stats %}
+                            <span class="statistic_name">{{ stat_name }}</span>
+                            <span class="statistic_value">{{ stat_value }}</span>
+                            <br>
+                        {% endfor %}
+
+                        {% for target in all_targets %}
+                            <span class="statistic_name">{{ target.target_name }}</span>
+                            <span class="statistic_value">{{ target.reversed_dependencies_count }}</span>
+                            <br>
+                        {% endfor %}
+                </span>
                 </p>
             </div>
         </div>
@@ -343,8 +355,7 @@
 
     if (nodes_to_use.length > 0) {
         var network = new vis.Network(container, data, options);
-    }
-    else {
+    } else {
         container.innerText = "No dependencies found.. "
     }
 
