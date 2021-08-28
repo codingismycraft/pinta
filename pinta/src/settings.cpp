@@ -23,6 +23,8 @@ Settings::Settings()  {
     _project_root = settings["project_root"].GetString();
     _include_root = settings["include_root"].GetString();
     _dependencies_filename = settings["dependencies_filename"].GetString();
+    _module_changes_filename  = settings["module_changes_filename"].GetString();
+    _history_db = settings["history_db"].GetString();
 }
 
 const Settings& Settings::obj() {
@@ -40,4 +42,12 @@ STRING Settings::get_include_root() const {
 
 STRING Settings::get_dependencies_filename() const{
     return _dependencies_filename;
+}
+
+STRING Settings::get_module_changes_filename() const{
+    return _module_changes_filename;
+}
+
+STRING Settings::get_history_db() const {
+    return _history_db;
 }
