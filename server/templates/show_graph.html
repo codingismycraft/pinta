@@ -38,36 +38,57 @@
 
             <div class="contentWrapper">
                 <div class="content active" id="direct_connections">
-                    <table style="width: 100%;">
+
+                    <table style="width:100%;table-layout: fixed; text-wrap: normal;word-wrap: break-word;">
                         <tr>
-                            <th>Adjacent Modules</th>
+
+                            <th>
+                                <img style="position:relative; left:1px; top:2px; background-color:grey;"
+                                     src="{{ url_for('static', filename='copy-to-clipboard.png') }}"
+                                     alt="Copy to clipboard." width="30"
+                                     height="30"
+                                     title="Copy to clipboard"
+                                     onclick="copy_to_clipboard();"
+                                />
+                                Adjacent Modules
+                            </th>
                         </tr>
                         {% for module, filename in direct_dependencies %}
-                            <tr>
-                                <td>
-                                    <a href="{{ filename }}"
-                                       style="text-decoration: none;"
-                                       title={{ filename }}>
-                                        {{ module }}
-                                    </a>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td>
+                                <a href="{{ filename }}"
+                                   style="text-decoration: none;"
+                                   title={{ filename }}>
+                                    {{ module }}
+                                </a>
+                            </td>
+                        </tr>
                         {% endfor %}
                     </table>
 
                 </div>
                 <div class="content" id="targets">
                     <table>
+                        <thead>
                         <tr>
-                            <th>Affected Targets ( {{ affected_targets | length }}) </th>
-                            <th>Out Connections</th>
+                            <th data-type="string">Affected Targets
+                                ( {{ affected_targets | length }})
+                            </th>
+                            <th data-type="number">Total In Connections</th>
                         </tr>
+                        </thead>
+                        <tbody>
+
                         {% for target in affected_targets %}
-                            <tr>
-                                <td>{{ target.target_name }}</td>
-                                <td class="align_center">{{ target.reversed_dependencies_count }}</td>
-                            </tr>
+                        <tr>
+                            <td>{{ target.target_name }}</td>
+                            <td class="align_center">{{
+                                target.reversed_dependencies_count }}
+                            </td>
+                        </tr>
                         {% endfor %}
+                        </tbody>
+
                     </table>
                 </div>
                 <div class="content" id="module_stats">
@@ -102,11 +123,11 @@
                         <table style="width:100%;table-layout: fixed; text-wrap: normal;word-wrap: break-word;">
                             <tr>
                                 <th>Target</th>
-                                <th>Out Connections</th>
+                                <th>Total In Connections</th>
                             </tr>
                             {% for target in all_targets %}
                                 <tr>
-                                    <td>{{ target.target_name }}</td>
+                                    <td>{{ target.module_name }}</td>
                                     <td class="align_center">{{ target.reversed_dependencies_count }}</td>
                                 </tr>
                             {% endfor %}
@@ -118,9 +139,18 @@
     </div>
 
     <div id="right"></div>
+
+    <textarea id="data_to_copy_to_clipboard" name="hide" style="display:none;">{{ data_summary }}</textarea>
 </div>
 
+
 <script type="text/javascript">
+
+
+    function copy_to_clipboard() {
+        var element = document.getElementById("data_to_copy_to_clipboard");
+        navigator.clipboard.writeText(element.innerText);
+    }
 
     function prepare_tabs() {
         const tabs = document.querySelector(".wrapper");

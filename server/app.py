@@ -58,7 +58,6 @@ def _get_path_from_module(module):
 
 
 def _get_targets():
-    rd = ReverseDependencies(settings.dependencies_filename)
     cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
     os.system(cmd)
     lines = open('tmp', 'r').readlines()
@@ -110,20 +109,40 @@ def data(varargs=None):
         doc_title = doc_title.split('.')[-1]
 
     direct_dependencies = [
-        (_abbreviate_module_name(dd), _get_path_from_module(dd))
+        (dd, _get_path_from_module(dd))
         for dd in info.direct_dependencies
     ]
+
+    data_summary = f"Module: {filepath}\n\n"
+    data_summary += f"Direct Dependencies\n"
+    divisor_line = '=' * 20 + '\n'
+    data_summary += divisor_line
+    for dd in info.direct_dependencies:
+        data_summary += _get_path_from_module(dd).replace(
+            settings.project_root, "") + '\n'
 
     all_targets = Targets()
 
     affected_targets = []
+
+    data_summary += "\n\nAffected Targets\n"
+    data_summary += divisor_line
+
     for trgt in info.affected_targets:
         filename = _get_path_from_module(trgt)
+        data_summary += filename.replace(
+            settings.project_root, "") + '\n'
         try:
             affected_target = all_targets.get_target_by_filename(filename)
             affected_targets.append(affected_target)
         except exceptions.TargetNotFound:
             print(f"Target: {filename} not found.")
+
+    data_summary += "\n\nAll Available Targets\n"
+    data_summary += divisor_line
+    for trgt in all_targets.get_all():
+        data_summary += trgt.module_name + '\n'
+
 
     affected_targets = sorted(
         affected_targets,
@@ -146,10 +165,10 @@ def data(varargs=None):
         affected_targets=affected_targets,
         graph_stats=info.graph_stats,
         all_targets=all_targets.get_all(),
-        disconnected_subgraphs=info.disconnected_subgraphs
+        disconnected_subgraphs=info.disconnected_subgraphs,
+        data_summary=data_summary
     )
 
 
 if __name__ == '__main__':
-    # print(_get_path_from_module("pants.services.data.borrelly.impl.aggregatorpool"))
-    app.run()
+    app.run(host="localhost", port=5555, debug=True)

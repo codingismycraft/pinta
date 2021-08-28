@@ -1,45 +1,12 @@
 """Creates the dependency list."""
 
 import csv
-import collections
-import exceptions
-
-import disconnected_graph
 import settings
+
+import graph_info
 
 # Aliases.
 settings = settings.settings
-
-GraphInfo = collections.namedtuple(
-    "GraphInfo",
-    [
-        "nodes",
-        "edges",
-        "direct_dependencies",
-        "affected_targets",
-        "graph_stats",
-        "disconnected_subgraphs"
-    ]
-)
-
-
-def _make_graph_stats(graph):
-    """Returns statistics for the passed in graph.
-
-    :param dict graph: The graph to get statistics for.
-
-    :return: The statistics for the passed in graph.
-    :rtype: list[tuple].
-    """
-    edge_count = 0
-
-    for edges in graph.values():
-        edge_count += len(edges)
-
-    return [
-        ("Nodes", f'{len(graph):,}'),
-        ("Edges", f'{edge_count:,}'),
-    ]
 
 
 def get_dependency_graph(node, targets=None):
@@ -52,7 +19,7 @@ def get_dependency_graph(node, targets=None):
     :rtype: GraphInfo
     """
     g = _make_graph()
-    disconnected_subgraphs = _get_disconnected_subgraphs(g)
+
     edges, direct_dependencies = _all_dependencies(node, g)
 
     if targets:
@@ -61,7 +28,13 @@ def get_dependency_graph(node, targets=None):
     affected_targets = []
 
     if not edges:
-        return GraphInfo([], [], [], [], _make_graph_stats(g))
+        return graph_info.GraphInfo(
+            graph=g,
+            nodes=[],
+            edges=[],
+            direct_dependencies=[],
+            affected_targets=[]
+        )
 
     all_nodes = set()
     for n1, n2 in edges:
@@ -115,13 +88,12 @@ def get_dependency_graph(node, targets=None):
             },
         )
 
-    info = GraphInfo(
+    info = graph_info.GraphInfo(
+        graph=g,
         nodes=list(node_to_info.values()),
         edges=edges_representation,
         direct_dependencies=sorted(direct_dependencies),
-        affected_targets=affected_targets,
-        graph_stats=_make_graph_stats(g),
-        disconnected_subgraphs=disconnected_subgraphs
+        affected_targets=affected_targets
     )
     return info
 
@@ -182,7 +154,7 @@ def _make_graph():
     :return: The full graph of the code base.
     :rtype: dict.
     """
-    g = {}
+    graph = {}
     filename = settings.dependencies_filename
     with open(filename, 'r') as f:
         for line_num, tokens in enumerate(csv.reader(f)):
@@ -190,33 +162,9 @@ def _make_graph():
                 continue
             n1 = tokens[0].strip()
             n2 = tokens[1].strip()
-            if n1 not in g:
-                g[n1] = []
-            if n2 not in g:
-                g[n2] = []
-            g[n1].append(n2)
-    return g
-
-
-def _get_disconnected_subgraphs(graph):
-    """Returns the the disconnected subgraphs.
-
-    :param dict graph: The graph to search for subgraphs.
-
-    :return: A tuple of the nodes count and indicative_module for each subgraph.
-    :rtype: list[Tuple[int, str]].
-    """
-    subgraphs = disconnected_graph.find_disconnected_graphs(graph)
-    indicative_modules = []
-    for subgraph in subgraphs:
-        indicative_module = None
-        counter = -1
-        for key, values in subgraph.items():
-            if counter < len(values):
-                indicative_module = key
-                counter = len(values)
-        indicative_modules.append((len(subgraph), indicative_module))
-    return indicative_modules
-
-
-
+            if n1 not in graph:
+                graph[n1] = []
+            if n2 not in graph:
+                graph[n2] = []
+            graph[n1].append(n2)
+    return graph
