@@ -56,6 +56,12 @@ bool ends_with(const std::string &mainStr, const std::string &toMatch) {
         return false;
 }
 
+bool starts_with(const std::string &mainStr, const std::string &toMatch) {
+    if (mainStr.size() >= toMatch.size() && mainStr.compare(0, toMatch.size(), toMatch) == 0)
+        return true;
+    else
+        return false;
+}
 
 bool is_regular_file(const std::string &parent_dir, const std::string &filename) {
     auto path = parent_dir + "/" + filename;
@@ -232,23 +238,7 @@ STRVEC discover_all_python_files(CSTRREF root) {
 }
 
 
-void create_dag() {
-    auto settings = Settings::obj();
-    CSTRING output_filename = settings.get_dependencies_filename();
-    FILE *f = fopen(output_filename.c_str(), "w");
-    if (f == NULL) {
-        std::cerr << "Error creating the output file: " << output_filename << std::endl;
-        exit(1);
-    }
-    fprintf(f, "node1, node2\n");
-    auto files = discover_all_python_files(settings.get_project_root());
-    int i = 0;
-    for (auto fn: files) {
-        ++i;
-        parse_file(fn, f);
-    }
-    fclose(f);
-}
+
 
 STRVEC _get_tokens(char *buffer) {
     STRVEC v;
