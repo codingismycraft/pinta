@@ -11,6 +11,7 @@ class _Settings:
     _include_root = None
     _dependencies_filename = None
     _pinta_executable = None
+    _history_db = None
 
     def __init__(self):
         """Initializer.
@@ -24,6 +25,8 @@ class _Settings:
             self._project_root = data["project_root"]
             self._include_root = data["include_root"]
             self._dependencies_filename = data["dependencies_filename"]
+            self._history_db = data["history_db"]
+
         self._pinta_executable = os.path.join(home_dir, ".pinta", "pinta")
 
     @property
@@ -61,6 +64,15 @@ class _Settings:
         :rtype: str.
         """
         return self._pinta_executable
+
+    @property
+    def history_db(self):
+        """Returns the path to the history database.
+
+        :return: The path to the history database.
+        :rtype: str.
+        """
+        return self._history_db
 
 
 settings = _Settings()

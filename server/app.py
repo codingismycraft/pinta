@@ -11,6 +11,7 @@ import graph_creator
 import reversed_dependencies
 import settings
 import targets
+import utils
 
 # Aliases.
 settings = settings.settings
@@ -20,74 +21,12 @@ Targets = targets.Targets
 app = Flask(__name__)
 
 
-def _get_module_from_path(filepath):
-    """Returns the corresponding python module to the passed in filepath.
-
-    :param str filepath: The full path to the python file.
-
-    :return: The corresponding python module to the passed in filepath.
-    :rtype: str.
-    """
-    if not filepath.startswith('/'):
-        filepath = '/' + filepath
-    filepath = filepath.replace(settings.include_root, "")
-    filepath = filepath.replace("/", ".")
-    if filepath.startswith('.'):
-        filepath = filepath[1:]
-    if filepath.endswith('.py'):
-        filepath = filepath[:-3]
-    return filepath
-
-
-def _get_path_from_module(module):
-    """Returns the corresponding path for the passed in python module.
-
-    :param str module: The module to use.
-
-    :return: The corresponding path for the passed in python module.
-    :rtype: str.
-    """
-    filepath = module
-    filepath = filepath.replace(".", "/")
-    if not filepath.endswith(".py"):
-        filepath += '.py'
-    if not filepath.startswith("/"):
-        filepath = '/' + filepath
-    filepath = settings.include_root + filepath
-    return filepath
-
-
 def _get_targets():
     cmd = f'find {settings.project_root} -type f -iname "*target*py" > tmp'
     os.system(cmd)
     lines = open('tmp', 'r').readlines()
     os.remove("tmp")
-    return [_get_module_from_path(line.strip()) for line in lines]
-
-
-def _abbreviate_module_name(module_name):
-    """Abbreviates the passed in module_name.
-
-    :param str module_name: The full module_name to abbreviate.
-
-    :return: The abbreviated module name.
-    :rtype: str.
-    """
-    tokens = module_name.split('.')
-    return tokens[-1]
-
-
-def _get_target_name(module_name):
-    """Returns the target_name.
-
-    :param str module_name: The full module_name of the target.
-
-
-    :return: The target name.
-    :rtype: str.
-    """
-    tokens = module_name.split('.')
-    return tokens[-1].replace("_target", "")
+    return [utils.get_module_from_path(line.strip()) for line in lines]
 
 
 @app.route("/<path:varargs>")
@@ -97,7 +36,7 @@ def data(varargs=None):
     varargs = varargs.split("/")
 
     filepath = '/'.join(varargs)
-    module_name = _get_module_from_path(filepath)
+    module_name = utils.get_module_from_path(filepath)
 
     info = graph_creator.get_dependency_graph(module_name, _get_targets())
 
@@ -109,7 +48,7 @@ def data(varargs=None):
         doc_title = doc_title.split('.')[-1]
 
     direct_dependencies = [
-        (dd, _get_path_from_module(dd))
+        (dd, utils.get_path_from_module(dd))
         for dd in info.direct_dependencies
     ]
 
@@ -118,7 +57,7 @@ def data(varargs=None):
     divisor_line = '=' * 20 + '\n'
     data_summary += divisor_line
     for dd in info.direct_dependencies:
-        data_summary += _get_path_from_module(dd).replace(
+        data_summary += utils.get_path_from_module(dd).replace(
             settings.project_root, "") + '\n'
 
     all_targets = Targets()
@@ -129,7 +68,7 @@ def data(varargs=None):
     data_summary += divisor_line
 
     for trgt in info.affected_targets:
-        filename = _get_path_from_module(trgt)
+        filename = utils.get_path_from_module(trgt)
         data_summary += filename.replace(
             settings.project_root, "") + '\n'
         try:
@@ -142,7 +81,6 @@ def data(varargs=None):
     data_summary += divisor_line
     for trgt in all_targets.get_all():
         data_summary += trgt.module_name + '\n'
-
 
     affected_targets = sorted(
         affected_targets,

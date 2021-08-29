@@ -1,108 +1,146 @@
-"""Exposes a class that holds the change history for all modules.
+"""Calculates change statistics for all modules."""
 
-Using the git log we are creating a history of changes for each module
-and also append to it the number of target dependencies.
-"""
-
-import csv
+import datetime
+import sqlite3
 
 import settings
-import targets
+import utils
 
 # Aliases.
+timedelta = datetime.timedelta
+datetime = datetime.datetime
 settings = settings.settings
-Targets = targets.Targets
 
 
-class ModuleStats:
-    """Holds the statistics for a module.
+class _TimeUnit:
+    PERIOD_IN_DAYS = 14
+    CUTOFF_PERIODS = -10
 
-    :ivar str _module_name: The name of the module
-    :ivar list _affected_targets: The affected targets.
-    """
+    def __init__(self, date):
+        date = datetime.strptime(date, '%Y%m%d')
+        period_index = ((date - datetime(date.year, 1,
+                                         1)).days // self.PERIOD_IN_DAYS) + 1
+        if period_index % 2 == 1:
+            period_index += 1
+        self._date = date
+        self._year = date.year
+        self._period_index = period_index
 
-    def __init__(self, module_name, affected_targets):
-        """Initializer.
+    @property
+    def year(self):
+        return self._year
 
-        :param str module_name: The module name.
-        :param set affected_targets: The affected targets.
-        """
-        self._module_name = module_name
-        self._affected_targets = list(affected_targets)
-
-    def __repr__(self):
-        """Make debugging easier!"""
-        return f'ModuleStats: {self._module_name}, ' \
-               f'{len(self._affected_targets)}'
+    @property
+    def period_index(self):
+        return self._period_index
 
     @classmethod
-    def load_module_stats(cls):
-        return [
-            cls(module_name=module_name, affected_targets=affected_targets)
-            for module_name, affected_targets in _target_dependencies().items()
-        ]
+    def get_cutoff_date(cls):
+        now = datetime.now()
+        cutoff_date = now + timedelta(cls.PERIOD_IN_DAYS * cls.CUTOFF_PERIODS)
+        return cutoff_date.strftime('%Y%m%d')
+
+    def count_periods_since_now(self):
+        now = datetime.now()
+        diff = (now - self._date).days
+        return 1 + diff // self.PERIOD_IN_DAYS
+
+    def __eq__(self, other):
+        return self.period_index == other.period_index and self.period_index == other.period_index
+
+    def __hash__(self):
+        return hash((self.year, self.period_index))
+
+    def __lt__(self, other):
+        if self.year < other.year:
+            return True
+        if self.year > other.year:
+            return False
+        return self.period_index < other.period_index
+
+    def __repr__(self):
+        return f'Week({self.year}, {self.period_index})'
 
 
-def _target_dependencies():
-    graph = _create_graph()
-    dependencies = {
-        parent: set()
-        for parent in graph.keys()
-    }
-    all_targets = Targets()
-    for target in all_targets.get_all():
-        _upadate_dependencies(graph, target.module_name, dependencies)
+class _ChangeHistory:
+    def __init__(self, filepath):
+        self._module_name = utils.get_module_from_path(filepath)
+        self._periods = set()
+        self._latest_periods = set()
 
-    return dependencies
+    def __repr__(self):
+        """Make debugging easy!"""
+        p = list(self._periods)
+        p.sort()
+
+        lp = list(self._latest_periods)
+        lp.sort()
+
+        return f'{self.changes_count} =>  {self.lifespan} => {self.change_rate}  => {self.latest_changes_count} =>  {self.name} => {p} => {lp}'
+
+    def __lt__(self, other):
+        return self.change_rate < other.change_rate
+
+    @property
+    def lifespan(self):
+        """Returns the number of weeks since the module was created.
+
+        :return: The number of weeks since the module was created.
+        :rtype: int
+        """
+        return min(self._periods).count_periods_since_now()
+
+    @property
+    def lifespan_in_days(self):
+        periods = min(self._periods).count_periods_since_now()
+        return periods * _TimeUnit.PERIOD_IN_DAYS
+
+    @property
+    def changes_count(self):
+        return len(self._periods)
+
+    @property
+    def latest_changes_count(self):
+        return len(self._latest_periods)
+
+    @property
+    def change_rate(self):
+        rate = int((len(self._periods) / self.lifespan) * 100)
+        return rate if rate <= 100 else 100
+
+    @property
+    def name(self):
+        return self._module_name
+
+    def add_change_date(self, date):
+        self._periods.add(_TimeUnit(date))
+        cutoff_date = _TimeUnit.get_cutoff_date()
+        if date >= cutoff_date:
+            self._latest_periods.add(_TimeUnit(date))
 
 
-def _create_graph():
-    """Creates the reversed dependencies graph.
+def load_change_history():
+    """Loads the history for each module.
 
-    The adjacent edges as the are recorded in the dependencies file represent
-    an "out" relationship between the imported and the importing modules.
-
-    Here we need the reversed dependency meaning the "in" dependency because
-    the goal is to discover how each module affects each of the targets. This
-    why we are constructing the graph in the opposite direction meaning from
-    the second to the first node as it appears in the dependency file.
-
-    :return: The "in" dependency graph for the dependencies file.
-    :rtype: dict
+    :returns: A list of _ChangeHistory instances.
+    :rtype: list.
     """
-    graph = {}
-
-    with open(settings.dependencies_filename) as file:
-        for tokens in csv.reader(file):
-            n1 = tokens[0].strip()
-            n2 = tokens[1].strip()
-            if n1 not in graph:
-                graph[n1] = []
-            if n2 not in graph:
-                graph[n2] = []
-            graph[n2].append(n1)
-
-    return graph
-
-
-def _upadate_dependencies(graph, target, dependencies):
-    stack = [(target, iter(graph[target]))]
-    dependencies[target].add(target)
-    visited = set()
-    visited.add(target)
-    while stack:
-        parent, iter_to_children = stack[-1]
-        dependencies[parent].add(target)
-        try:
-            child = next(iter_to_children)
-            if child not in visited:
-                stack.append((child, iter(graph[child])))
-                visited.add(child)
-        except StopIteration:
-            stack.pop()
+    changes = {}
+    conn = sqlite3.connect(settings.history_db)
+    c = conn.cursor()
+    for row in c.execute('SELECT name, date FROM history'):
+        module_name = utils.get_module_from_path(row[0]).strip()
+        date = row[1].strip()
+        if module_name not in changes:
+            changes[module_name] = _ChangeHistory(module_name)
+        changes[module_name].add_change_date(date)
+    conn.close()
+    return changes
 
 
 if __name__ == '__main__':
+    changes = load_change_history()
+    # changes.sort()
 
-    for module in ModuleStats.load_module_stats():
-        print(module)
+    for k, v in changes.items():
+        print(v)
