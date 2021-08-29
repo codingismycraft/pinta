@@ -9,6 +9,7 @@ from flask import render_template
 import exceptions
 import graph_creator
 import reversed_dependencies
+import module_stats
 import settings
 import targets
 import utils
@@ -27,6 +28,11 @@ def _get_targets():
     lines = open('tmp', 'r').readlines()
     os.remove("tmp")
     return [utils.get_module_from_path(line.strip()) for line in lines]
+
+@app.route("/libstats")
+def libstats():
+    stats = module_stats.ModuleStats.load_module_stats()
+    return render_template("libstats.html", stats=stats)
 
 
 @app.route("/<path:varargs>")

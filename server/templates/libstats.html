@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Module Stats</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.css">
+
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.js"></script>
+
+    <script type="text/javascript" charset="utf8"
+            src="https://cdn.datatables.net/1.11.0/css/jquery.dataTables.min.css"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#module_stats_table').DataTable({
+                "pageLength": 40,
+                "lengthMenu": [10, 25, 40, 50, 75, 100],
+            });
+
+
+        });
+    </script>
+</head>
+<body>
+
+<table id="module_stats_table" class="display compact" style="width:100%">
+    <thead>
+    <tr>
+        <th>name</th>
+        <th>targets</th>
+        <th>dependencies</th>
+        <th>change-rate</th>
+        <th>all-changes</th>
+        <th>latest-changes</th>
+        <th>lifespan-in-days</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for module in stats %}
+    <tr>
+        <td>
+            <a href="{{ module.filepath }}"
+               style="text-decoration: none;"
+               title="{{ module.filepath }}">
+                {{ module.module_name }}
+            </a>
+        </td>
+
+
+        <td>{{ module.affected_targets }}</td>
+        <td>{{ module.dependency_count }}</td>
+        <td>{{ module.change_rate }}</td>
+        <td>{{ module.all_changes_count }}</td>
+        <td>{{ module.latest_changes_count }}</td>
+        <td>{{ module.lifespan_in_days }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

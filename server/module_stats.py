@@ -25,7 +25,7 @@ class ModuleStats:
 
     def __init__(self, module_name, affected_targets, dependency_count,
                  change_rate, all_changes_count, latest_changes_count,
-                 lifespan_in_days):
+                 lifespan_in_days, filepath):
         """Initializer.
 
         :param str module_name: The module name.
@@ -38,6 +38,7 @@ class ModuleStats:
         self._all_changes_count = all_changes_count
         self._latest_changes_count = latest_changes_count
         self._lifespan_in_days = lifespan_in_days
+        self._filepath = filepath
 
     @property
     def module_name(self):
@@ -67,6 +68,10 @@ class ModuleStats:
     def lifespan_in_days(self):
         return self._lifespan_in_days
 
+    @property
+    def filepath(self):
+        return self._filepath
+
     def __repr__(self):
         """Make debugging easier!"""
         return f'{self._module_name}, ' \
@@ -91,6 +96,7 @@ class ModuleStats:
             change_rate = ch.change_rate if ch else 'n/a'
             all_changes_count = ch.changes_count if ch else 'n/a'
             latest_changes_count = ch.latest_changes_count if ch else 'n/a'
+            filepath = ch.filepath if ch else 'n/a'
 
             stats.append(
                 cls(
@@ -100,7 +106,9 @@ class ModuleStats:
                     change_rate=change_rate,
                     all_changes_count=all_changes_count,
                     latest_changes_count=latest_changes_count,
-                    lifespan_in_days=lifespan_in_days
+                    lifespan_in_days=lifespan_in_days,
+                    filepath=filepath
+
                 )
             )
         return stats

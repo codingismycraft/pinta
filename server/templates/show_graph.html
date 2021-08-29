@@ -18,6 +18,7 @@
             <span><label>Edges</label><value>{{ number_of_edges }}</value></span>
             <span><label>Directly Connected</label><value>{{ direct_dependencies_count }}</value></span>
             <span><label>Targets</label><value>{{ affected_targets_count }}</value></span>
+            <span style="margin-left: 5px"><a href="/libstats" title="Details stats for all modules" target="_blank">Modules</a></span>
         </div>
     </div>
     <div id="left">
@@ -41,7 +42,6 @@
 
                     <table style="width:100%;table-layout: fixed; text-wrap: normal;word-wrap: break-word;">
                         <tr>
-
                             <th>
                                 <img style="position:relative; left:1px; top:2px; background-color:grey;"
                                      src="{{ url_for('static', filename='copy-to-clipboard.png') }}"

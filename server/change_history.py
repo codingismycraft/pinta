@@ -63,8 +63,9 @@ class _TimeUnit:
 
 
 class _ChangeHistory:
-    def __init__(self, filepath):
-        self._module_name = utils.get_module_from_path(filepath)
+    def __init__(self, module_name, filepath):
+        self._filepath = filepath
+        self._module_name = module_name
         self._periods = set()
         self._latest_periods = set()
 
@@ -76,7 +77,7 @@ class _ChangeHistory:
         lp = list(self._latest_periods)
         lp.sort()
 
-        return f'{self.changes_count} =>  {self.lifespan} => {self.change_rate}  => {self.latest_changes_count} =>  {self.name} => {p} => {lp}'
+        return f'{self.changes_count} =>  {self.lifespan} => {self.change_rate}  => {self.latest_changes_count} =>  {self.filepath} => {p} => {lp}'
 
     def __lt__(self, other):
         return self.change_rate < other.change_rate
@@ -112,6 +113,10 @@ class _ChangeHistory:
     def name(self):
         return self._module_name
 
+    @property
+    def filepath(self):
+        return self._filepath
+
     def add_change_date(self, date):
         self._periods.add(_TimeUnit(date))
         cutoff_date = _TimeUnit.get_cutoff_date()
@@ -129,10 +134,11 @@ def load_change_history():
     conn = sqlite3.connect(settings.history_db)
     c = conn.cursor()
     for row in c.execute('SELECT name, date FROM history'):
-        module_name = utils.get_module_from_path(row[0]).strip()
+        filepath = row[0].strip()
+        module_name = utils.get_module_from_path(filepath).strip()
         date = row[1].strip()
         if module_name not in changes:
-            changes[module_name] = _ChangeHistory(module_name)
+            changes[module_name] = _ChangeHistory(module_name, filepath)
         changes[module_name].add_change_date(date)
     conn.close()
     return changes
