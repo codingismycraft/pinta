@@ -19,7 +19,6 @@
 #include <iostream>
 
 
-
 static char BUFFER[10000];
 
 static char DATE_BUFFER[128];
@@ -93,13 +92,16 @@ static void parse_git_log(CSTRREF full_path, FILE *fp_output) {
     pclose(fp);
 }
 
-void create_sqlite_db(){
+void create_sqlite_db() {
     // sqlite3 junk.db ".import module_changes.csv history"
     auto settings = Settings::obj();
     auto cmd = "rm " + settings.get_history_db();
     system(cmd.c_str());
-
-    cmd = "sqlite3 " + settings.get_history_db() + " \".import " + settings.get_module_changes_filename() + " history\"";
+    cmd = "sqlite3 " + settings.get_history_db() + " \"create table history (name text, author text, date text);\"";
+    system(cmd.c_str());
+    cmd = "sqlite3 " + settings.get_history_db() + " -separator ',' " +
+            " \'.import " + settings.get_module_changes_filename() + " history\'";
+    std::cout << cmd << std::endl;
     system(cmd.c_str());
 }
 
@@ -107,7 +109,6 @@ void export_git_history() {
     auto settings = Settings::obj();
     auto files = discover_all_python_files(settings.get_project_root());
     FILE *fp = fopen(settings.get_module_changes_filename().c_str(), "w");
-    fprintf(fp, "name,user,date\n");
     if (fp == NULL) {
         std::cerr << "Error creating the output file: " << settings.get_module_changes_filename() << std::endl;
         exit(-1);
@@ -117,5 +118,7 @@ void export_git_history() {
         std::cout << ++i << std::endl;
         parse_git_log(full_path, fp);
     }
+    fclose(fp);
+    fp = NULL;
     create_sqlite_db();
 }
