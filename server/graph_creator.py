@@ -8,6 +8,31 @@ import graph_info
 # Aliases.
 settings = settings.settings
 
+def get_affected_tests(node):
+    """Returns all the tests that are related to the passed in node.
+
+    :param str node: The node to get dependencies for.
+    """
+    g = _make_graph()
+
+    edges, direct_dependencies = _all_dependencies(node, g)
+    affected_tests = set()
+
+    if not edges:
+        return affected_tests
+
+    all_nodes = set()
+    for n1, n2 in edges:
+        all_nodes.add(n1)
+        all_nodes.add(n2)
+
+    for index, node_name in enumerate(all_nodes):
+        filename = node_name.split('.')[-1]
+        if filename.startswith("test_") or filename.endswith("_test"):
+            affected_tests.add(node_name)
+
+    return sorted(list(affected_tests))
+
 
 def get_dependency_graph(node, targets=None):
     """Returns the dependent nodes and the edges for the passed in node.

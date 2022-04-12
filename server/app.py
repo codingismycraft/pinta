@@ -5,6 +5,7 @@ import json
 
 from flask import Flask
 from flask import render_template
+from flask import jsonify
 
 import exceptions
 import graph_creator
@@ -29,10 +30,21 @@ def _get_targets():
     os.remove("tmp")
     return [utils.get_module_from_path(line.strip()) for line in lines]
 
+
 @app.route("/libstats")
 def libstats():
     stats = module_stats.ModuleStats.load_module_stats()
     return render_template("libstats.html", stats=stats)
+
+
+@app.route("/testing_targets/<path:varargs>")
+def testing_targets(varargs=None):
+    """Returns a JSON document with all the testing targets for the module."""
+    varargs = varargs.split("/")
+    filepath = '/'.join(varargs)
+    module_name = utils.get_module_from_path(filepath)
+    info = graph_creator.get_affected_tests(module_name)
+    return jsonify({"affected_tests": info})
 
 
 @app.route("/<path:varargs>")
