@@ -21,11 +21,11 @@ While its content should be:
 
 ```
     {
-        "project_root": "/home/john/repos/milky-way/src",
-        "include_root": "/home/john/repos/milky-way/src/python",
-        "dependencies_filename": "/home/john/.pinta/deps",
-        "module_changes_filename": "/home/john/.pinta/module_changes.csv",
-        "history_db": "/home/john/.pinta/history.db"
+        "project_root": "...",
+        "include_root": "...",
+        "dependencies_filename": "...",
+        "module_changes_filename": "...",
+        "history_db": "..."
     }
 ```
 
