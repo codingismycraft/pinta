@@ -38,3 +38,12 @@
 **/cmake-build-release
 
 
+server/__pycache__/change_history.cpython-39.pyc
+server/__pycache__/exceptions.cpython-39.pyc
+server/__pycache__/graph_creator.cpython-39.pyc
+server/__pycache__/graph_info.cpython-39.pyc
+server/__pycache__/module_stats.cpython-39.pyc
+server/__pycache__/reversed_dependencies.cpython-39.pyc
+server/__pycache__/settings.cpython-39.pyc
+server/__pycache__/targets.cpython-39.pyc
+server/__pycache__/utils.cpython-39.pyc
